@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using WiredBrainCoffeeAdmin.Data;
@@ -7,6 +6,17 @@ namespace WiredBrainCoffeeAdmin.Pages.Products
 {
     public class AddProductModel : PageModel
     {
+        private readonly WiredContext _context;
+        private readonly IWebHostEnvironment _environment;
+
+        public AddProductModel(
+            WiredContext context,
+            IWebHostEnvironment environment)
+        {
+            _context = context;
+            _environment = environment;
+        }
+
         [BindProperty]
         public Product NewProduct { get; set; }
 
@@ -14,19 +24,35 @@ namespace WiredBrainCoffeeAdmin.Pages.Products
         {
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-
-                // save product to database
-                var productName = NewProduct.Name;
-
-                // TODO: the following may be appropriate to convert PageModel names to unadorned Page names.
-                return RedirectToPage(GetPageName(typeof(ViewAllProductsModel)));
+                return Page();
             }
 
-            return Page();
+            if (NewProduct.Upload is not null)
+            {
+                NewProduct.ImageFile = NewProduct.Upload.FileName;
+
+                var file = Path.Combine(
+                    _environment.ContentRootPath,
+                    @"wwwroot/images/menu",
+                    NewProduct.Upload.FileName);
+
+                await using (var fileStream = new FileStream(file, FileMode.Create))
+                {
+                    await NewProduct.Upload.CopyToAsync(fileStream);
+                }
+            }
+
+            NewProduct.Created = DateTime.Now;
+            _context.Products.Add(NewProduct);
+            await _context.SaveChangesAsync();
+
+            // TODO: the following may be appropriate to convert PageModel names to unadorned Page names.
+            return RedirectToPage(GetPageName(typeof(ViewAllProductsModel)));
+
         }
 
         // TODO: make new PageModel base class with helpers like this

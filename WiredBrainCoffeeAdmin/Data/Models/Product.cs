@@ -11,11 +11,10 @@ namespace WiredBrainCoffeeAdmin.Data
         public string Name { get; set; }
 
         [Required]
-        [MinLength(20, ErrorMessage = "The Description should be at least 20 characters")]
         public string Description { get; set; }
 
         [Required]
-        [MaxLength(30)]
+        [MaxLength(300)]
         public string ShortDescription { get; set; }
 
         [Required]
