@@ -6,14 +6,14 @@ namespace WiredBrainCoffeeAdmin.Pages.Products
 {
     public class AddProductModel : PageModel
     {
-        private readonly WiredContext _context;
+        private readonly IProductRepository _repository;
         private readonly IWebHostEnvironment _environment;
 
         public AddProductModel(
-            WiredContext context,
+            IProductRepository repository,
             IWebHostEnvironment environment)
         {
-            _context = context;
+            _repository = repository;
             _environment = environment;
         }
 
@@ -33,7 +33,7 @@ namespace WiredBrainCoffeeAdmin.Pages.Products
 
             if (NewProduct.Upload is not null)
             {
-                NewProduct.ImageFile = NewProduct.Upload.FileName;
+                NewProduct.ImageFileName = NewProduct.Upload.FileName;
 
                 var file = Path.Combine(
                     _environment.ContentRootPath,
@@ -47,8 +47,7 @@ namespace WiredBrainCoffeeAdmin.Pages.Products
             }
 
             NewProduct.Created = DateTime.Now;
-            _context.Products.Add(NewProduct);
-            await _context.SaveChangesAsync();
+            _repository.Add(NewProduct);
 
             // TODO: the following may be appropriate to convert PageModel names to unadorned Page names.
             return RedirectToPage(GetPageName(typeof(ViewAllProductsModel)));
